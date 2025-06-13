@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plant Disease Detection</title>
+</head>
+<body>
+    <h1>Upload Leaf Image for Disease Prediction</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if result %}
+        <h2>Prediction: {{ result }}</h2>
+        <img src="{{ image_url }}" alt="Uploaded Image" width="300">
+    {% endif %}
+</body>
+</html>
