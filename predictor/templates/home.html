@@ -2,82 +2,351 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plant Disease Detector</title>
     <style>
+        :root {
+            --bg: #f3efe7;
+            --panel: rgba(255, 255, 255, 0.84);
+            --panel-strong: #ffffff;
+            --text: #163024;
+            --muted: #5d6d64;
+            --accent: #2e7d32;
+            --accent-2: #9bbd57;
+            --danger: #b42318;
+            --border: rgba(22, 48, 36, 0.1);
+            --shadow: 0 24px 60px rgba(22, 48, 36, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f6f8;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(155, 189, 87, 0.25), transparent 28%),
+                radial-gradient(circle at top right, rgba(46, 125, 50, 0.14), transparent 30%),
+                linear-gradient(135deg, #f7f4ed 0%, #eef5ea 100%);
+            min-height: 100vh;
         }
 
-        .container {
-            background-color: white;
-            padding: 30px 40px;
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0 40px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .panel {
+            background: var(--panel);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .intro {
+            padding: 34px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intro::after {
+            content: "";
+            position: absolute;
+            inset: auto -40px -60px auto;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(46, 125, 50, 0.2), rgba(46, 125, 50, 0));
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--accent);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        h1 {
+            margin: 18px 0 12px;
+            font-size: clamp(2.2rem, 4vw, 4.2rem);
+            line-height: 0.98;
+        }
+
+        .lede {
+            margin: 0;
+            max-width: 56ch;
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .stat {
+            padding: 16px;
             border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            text-align: center;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--border);
         }
 
-        h2 {
-            margin-bottom: 20px;
-            color: #2e7d32;
+        .stat strong {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .upload {
+            padding: 28px;
+            background: var(--panel-strong);
+        }
+
+        .upload h2,
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 1.35rem;
+        }
+
+        .upload p,
+        .section-subtitle {
+            margin: 0 0 22px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .error {
+            margin: 0 0 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #fdecec;
+            color: var(--danger);
+            border: 1px solid rgba(180, 35, 24, 0.12);
+        }
+
+        form {
+            display: grid;
+            gap: 16px;
+        }
+
+        .file-box {
+            padding: 18px;
+            border: 1.5px dashed rgba(46, 125, 50, 0.25);
+            border-radius: 22px;
+            background: #fafdf8;
         }
 
         input[type="file"] {
-            padding: 10px;
-            margin: 10px 0;
-        }
-
-        button {
-            background-color: #43a047;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #2e7d32;
+            width: 100%;
+            color: var(--muted);
         }
 
         .preview {
-            margin-top: 20px;
+            min-height: 200px;
+            border-radius: 22px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.08), rgba(155, 189, 87, 0.14));
         }
 
-        .preview img {
-            max-width: 300px;
-            border-radius: 10px;
-            margin-top: 10px;
+        .preview img,
+        .history-card img,
+        .result-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview span {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        button {
+            appearance: none;
+            border: none;
+            border-radius: 16px;
+            padding: 15px 18px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--accent), #1f5f26);
+            cursor: pointer;
+            box-shadow: 0 14px 28px rgba(46, 125, 50, 0.25);
+        }
+
+        button:hover {
+            filter: brightness(1.03);
+        }
+
+        .section {
+            margin-top: 24px;
+            padding: 28px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .history-card {
+            overflow: hidden;
+            border-radius: 22px;
+            background: white;
+            border: 1px solid var(--border);
+        }
+
+        .history-thumb {
+            aspect-ratio: 4 / 3;
+            background: #edf3e8;
+        }
+
+        .history-body {
+            padding: 14px 16px 16px;
+        }
+
+        .history-body strong {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        .history-body small {
+            display: block;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .empty {
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px dashed rgba(22, 48, 36, 0.14);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>🌿 Plant Disease Detector</h2>
-        <form action="{% url 'predict' %}" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="image" accept="image/*" onchange="previewImage(event)" required><br>
-            <button type="submit">Predict</button>
-        </form>
-        <div class="preview" id="imagePreview"></div>
+    <div class="shell">
+        <section class="hero">
+            <div class="panel intro">
+                <div class="eyebrow">Plant disease detection with saved history</div>
+                <h1>Scan a leaf, keep the record, and review past uploads.</h1>
+                <p class="lede">
+                    Upload a plant image to identify the most likely disease. Every submission is stored so you can revisit earlier predictions without re-uploading them.
+                </p>
+                <div class="stats">
+                    <div class="stat">
+                        <strong>{{ recent_uploads|length }}</strong>
+                        <span>Recent uploads shown below</span>
+                    </div>
+                    <div class="stat">
+                        <strong>15</strong>
+                        <span>Supported disease classes</span>
+                    </div>
+                    <div class="stat">
+                        <strong>1 click</strong>
+                        <span>From upload to saved result</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel upload">
+                <h2>Upload a leaf image</h2>
+                <p>Select a clear photo of the affected leaf. The image will be stored with the prediction result.</p>
+                {% if error %}
+                    <div class="error">{{ error }}</div>
+                {% endif %}
+                <form action="{% url 'predict' %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="file-box">
+                        <input type="file" name="image" accept="image/*" onchange="previewImage(event)" required>
+                    </div>
+                    <div class="preview" id="imagePreview"><span>Preview appears here</span></div>
+                    <button type="submit">Run prediction</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="panel section">
+            <h2 class="section-title">Previously uploaded plants</h2>
+            <p class="section-subtitle">These records are stored in the database and stay available across visits.</p>
+            {% if recent_uploads %}
+                <div class="history-grid">
+                    {% for upload in recent_uploads %}
+                        <article class="history-card">
+                            <div class="history-thumb">
+                                <img src="{{ upload.image.url }}" alt="Uploaded plant image">
+                            </div>
+                            <div class="history-body">
+                                <strong>{{ upload.predicted_label }}</strong>
+                                <small>
+                                    Confidence: {{ upload.confidence|floatformat:2 }}<br>
+                                    Uploaded: {{ upload.created_at|date:"M d, Y H:i" }}
+                                </small>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">No saved uploads yet. Predict your first leaf image to start the history.</div>
+            {% endif %}
+        </section>
     </div>
 
     <script>
         function previewImage(event) {
+            const file = event.target.files && event.target.files[0];
+            const output = document.getElementById('imagePreview');
+
+            if (!file) {
+                output.innerHTML = '<span>Preview appears here</span>';
+                return;
+            }
+
             const reader = new FileReader();
-            reader.onload = function(){
-                const output = document.getElementById('imagePreview');
-                output.innerHTML = `<img src="${reader.result}" alt="Image Preview">`;
+            reader.onload = function() {
+                output.innerHTML = '<img src="' + reader.result + '" alt="Image preview">';
             };
-            reader.readAsDataURL(event.target.files[0]);
+            reader.readAsDataURL(file);
         }
     </script>
 </body>

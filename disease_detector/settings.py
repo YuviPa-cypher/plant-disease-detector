@@ -78,7 +78,7 @@ USE_TZ = True
 
 # Static files settings
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'predictor/static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'predictor/static')] if os.path.isdir(os.path.join(BASE_DIR, 'predictor/static')) else []
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files settings (for uploaded images)

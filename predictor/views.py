@@ -5,9 +5,34 @@ from tensorflow.keras.preprocessing import image
 import numpy as np
 import os
 
-# Load trained model
+from .models import PlantUpload
+
 model_path = os.path.join(os.path.dirname(__file__), 'model', 'plant_disease_model.h5')
-model = tf.keras.models.load_model(model_path)
+model = None
+model_load_error = None
+
+
+def get_model():
+    global model, model_load_error
+
+    if model is not None:
+        return model
+
+    if model_load_error is not None:
+        raise model_load_error
+
+    if not os.path.exists(model_path):
+        model_load_error = FileNotFoundError(
+            f"Model file not found at {model_path}. Train the model with cnn_model.py first."
+        )
+        raise model_load_error
+
+    try:
+        model = tf.keras.models.load_model(model_path)
+        return model
+    except Exception as exc:
+        model_load_error = exc
+        raise
 
 # Class labels (must match the dataset structure)
 class_names = [
@@ -29,10 +54,22 @@ class_names = [
 ]
 
 def predictor_view(request):
-    return render(request, 'home.html')
+    recent_uploads = PlantUpload.objects.order_by('-created_at')[:8]
+    return render(request, 'home.html', {
+        'recent_uploads': recent_uploads,
+    })
 
 def predict_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
+        try:
+            current_model = get_model()
+        except Exception as exc:
+            recent_uploads = PlantUpload.objects.order_by('-created_at')[:8]
+            return render(request, 'home.html', {
+                'error': str(exc),
+                'recent_uploads': recent_uploads,
+            }, status=503)
+
         img = request.FILES['image']
         fs = FileSystemStorage()
         filename = fs.save(img.name, img)
@@ -45,8 +82,10 @@ def predict_image(request):
         img_array = img_array / 255.0  # Normalize pixel values
 
         # Predict the disease
-        prediction = model.predict(img_array)
-        predicted_class = class_names[np.argmax(prediction)]
+        prediction = current_model.predict(img_array)
+        predicted_index = int(np.argmax(prediction))
+        predicted_class = class_names[predicted_index]
+        confidence = float(np.max(prediction))
 
         # Debugging: Log the raw prediction and predicted class
         import logging
@@ -54,21 +93,29 @@ def predict_image(request):
         logger.info(f"Raw model output: {prediction}")
         logger.info(f"Predicted class: {predicted_class}")
 
-        # Store result in session
-        request.session['result'] = str(predicted_class)  # Ensure data is a string
-        request.session['image_url'] = fs.url(filename)
-        request.session.modified = True  # ✅ Force Django to update session
+        upload = PlantUpload.objects.create(
+            image=filename,
+            predicted_label=predicted_class,
+            confidence=confidence,
+        )
+
+        request.session['result_id'] = upload.id
+        request.session.modified = True
 
         return redirect('result_page')
 
+    recent_uploads = PlantUpload.objects.order_by('-created_at')[:8]
+    return render(request, 'home.html', {
+        'error': 'Please upload an image to make a prediction.',
+        'recent_uploads': recent_uploads,
+    })
+
 def result_page(request):
-    result = request.session.get('result', 'No prediction available')
-    image_url = request.session.get('image_url', '')
+    result_id = request.session.get('result_id')
+    upload = PlantUpload.objects.filter(pk=result_id).first() if result_id else None
+    recent_uploads = PlantUpload.objects.order_by('-created_at')[:8]
 
-    # Use logging instead of print for debugging
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Data sent to template - Result: {result}")
-    logger.info(f"Data sent to template - Image URL: {image_url}")
-
-    return render(request, 'result.html', {'result': result, 'image_url': image_url})
+    return render(request, 'result.html', {
+        'upload': upload,
+        'recent_uploads': recent_uploads,
+    })

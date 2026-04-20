@@ -5,48 +5,250 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Result</title>
     <style>
+        :root {
+            --bg: #f3efe7;
+            --panel: rgba(255, 255, 255, 0.88);
+            --text: #163024;
+            --muted: #5d6d64;
+            --accent: #2e7d32;
+            --border: rgba(22, 48, 36, 0.1);
+            --shadow: 0 24px 60px rgba(22, 48, 36, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(155, 189, 87, 0.2), transparent 25%),
+                linear-gradient(135deg, #f7f4ed 0%, #eef5ea 100%);
         }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+
+        .shell {
+            width: min(1100px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0 40px;
         }
-        img {
-            max-width: 100%;
-            height: auto;
+
+        .panel {
+            background: var(--panel);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .result-layout {
+            display: grid;
+            grid-template-columns: 1fr 0.95fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .result-main,
+        .result-side,
+        .history {
+            padding: 28px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--accent);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin: 18px 0 12px;
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            line-height: 1;
+        }
+
+        .result-copy {
+            color: var(--muted);
+            line-height: 1.7;
+            margin: 0 0 22px;
+        }
+
+        .prediction {
+            padding: 18px 20px;
+            border-radius: 20px;
+            background: #f7fbf5;
+            border: 1px solid rgba(46, 125, 50, 0.14);
+        }
+
+        .prediction strong {
+            display: block;
+            font-size: 1.15rem;
+            margin-top: 6px;
+        }
+
+        .result-image-wrap {
+            overflow: hidden;
+            border-radius: 24px;
+            aspect-ratio: 4 / 3;
+            border: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.08), rgba(155, 189, 87, 0.14));
+        }
+
+        .result-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
             margin-top: 20px;
-            border-radius: 5px;
         }
-        .result-text {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
+
+        .button,
+        .ghost {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            padding: 14px 18px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .button {
+            color: white;
+            background: linear-gradient(135deg, var(--accent), #1f5f26);
+        }
+
+        .ghost {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid var(--border);
+        }
+
+        .history-title {
+            margin: 0 0 14px;
+            font-size: 1.25rem;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .history-card {
+            overflow: hidden;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: white;
+        }
+
+        .history-thumb {
+            aspect-ratio: 4 / 3;
+            background: #edf3e8;
+        }
+
+        .history-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .history-body {
+            padding: 12px 14px 14px;
+        }
+
+        .history-body strong,
+        .history-body small {
+            display: block;
+        }
+
+        .history-body strong {
+            margin-bottom: 4px;
+        }
+
+        .history-body small {
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .empty {
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px dashed rgba(22, 48, 36, 0.14);
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        @media (max-width: 900px) {
+            .result-layout {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Plant Disease Detection Result</h2>
+    <div class="shell">
+        <div class="result-layout">
+            <section class="panel result-main">
+                <div class="eyebrow">Prediction saved</div>
+                <h1>Plant Disease Result</h1>
+                <p class="result-copy">Your image has been analyzed and stored in the upload history for later review.</p>
 
-        {% if result %}
-            <p class="result-text">Prediction: {{ result }}</p>
-        {% else %}
-            <p class="result-text">No prediction available</p>
-        {% endif %}
+                {% if upload %}
+                    <div class="prediction">
+                        <span>Predicted disease</span>
+                        <strong>{{ upload.predicted_label }}</strong>
+                        <small>Confidence: {{ upload.confidence|floatformat:2 }}</small>
+                    </div>
+                {% else %}
+                    <div class="prediction">
+                        <span>No saved result</span>
+                        <strong>Upload a leaf image to generate a new prediction.</strong>
+                    </div>
+                {% endif %}
 
-        {% if image_url %}
-            <img src="{{ image_url }}" alt="Uploaded Image">
-        {% endif %}
+                <div class="action-row">
+                    <a class="button" href="{% url 'home' %}">Upload another image</a>
+                </div>
+            </section>
 
-        <br><br>
-        <a href="/">Upload Another Image</a>
+            <section class="panel result-side">
+                <div class="result-image-wrap">
+                    {% if upload %}
+                        <img class="result-image" src="{{ upload.image.url }}" alt="Uploaded plant image">
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <section class="panel history" style="margin-top: 24px;">
+            <h2 class="history-title">Recent uploads</h2>
+            {% if recent_uploads %}
+                <div class="history-grid">
+                    {% for item in recent_uploads %}
+                        <article class="history-card">
+                            <div class="history-thumb">
+                                <img src="{{ item.image.url }}" alt="Recent uploaded plant image">
+                            </div>
+                            <div class="history-body">
+                                <strong>{{ item.predicted_label }}</strong>
+                                <small>{{ item.created_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">No recent uploads yet.</div>
+            {% endif %}
+        </section>
     </div>
 </body>
 </html>
